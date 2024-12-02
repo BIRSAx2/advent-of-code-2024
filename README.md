@@ -1,127 +1,178 @@
-# Advent of Code Elixir Starter
+**Advent of Code 2024**
 
-A batteries included starter pack for participating in [Advent of Code](https://www.adventofcode.com) using Elixir!
+## Feature overview
 
-## Usage
+- Automatic downloading + caching of puzzle inputs
+- CLI for running puzzles + submitting answers to `adventofcode.com`
+- Automatic puzzle detection + registration
+- ReasonML support out of the box
 
-There are 25 modules, 25 tests, and 50 mix tasks.
+# Quick-start
 
-1. Fill in the tests with the example solutions.
-1. Write your implementation.
-1. Fill in the final problem inputs into the mix task and run `mix d01.p1`!
-    - Benchmark your solution by passing the `-b` flag, `mix d01.p1 -b`
+## Project setup
 
-```elixir
-defmodule AdventOfCode.Day01 do
-  def part1(args) do
-  end
+First, clone or fork this repo and change directories into the repo.
 
-  def part2(args) do
-  end
-end
-```
-
-```elixir
-defmodule AdventOfCode.Day01Test do
-  use ExUnit.Case
-
-  import AdventOfCode.Day01
-
-  @tag :skip # Make sure to remove to run your test.
-  test "part1" do
-    input = nil
-    result = part1(input)
-
-    assert result
-  end
-
-  @tag :skip # Make sure to remove to run your test.
-  test "part2" do
-    input = nil
-    result = part2(input)
-
-    assert result
-  end
-end
-```
-
-```elixir
-defmodule Mix.Tasks.D01.P1 do
-  use Mix.Task
-
-  import AdventOfCode.Day01
-
-  @shortdoc "Day 01 Part 1"
-  def run(args) do
-    input = AdventOfCode.Input.get!(1, 2020)
-
-    if Enum.member?(args, "-b"),
-      do: Benchee.run(%{part_1: fn -> input |> part1() end}),
-      else:
-        input
-        |> part1()
-        |> IO.inspect(label: "Part 1 Results")
-  end
-end
-```
-
-### Optional Automatic Input Retriever
-
-This starter comes with a module that will automatically get your inputs so you
-don't have to mess with copy/pasting. Don't worry, it automatically caches your
-inputs to your machine so you don't have to worry about slamming the Advent of
-Code server. You will need to configure it with your cookie and make sure to
-enable it. You can do this by creating a `config/secrets.exs` file containing
-the following:
-
-```elixir
-import Config
-
-config :advent_of_code, AdventOfCode.Input,
-  allow_network?: true,
-  session_cookie: "..." # yours will be longer
-```
-
-After which, you can retrieve your inputs using the module:
-
-```elixir
-day = 1
-year = 2020
-AdventOfCode.Input.get!(day, year)
-# or just have it auto-detect the current year
-AdventOfCode.Input.get!(7)
-# and if your input somehow gets mangled and you need a fresh one:
-AdventOfCode.Input.delete!(7, 2019)
-# and the next time you `get!` it will download a fresh one -- use this sparingly!
-```
-
-## Installation
+### Create your opam switch
 
 ```bash
-# clone
-$ git clone git@github.com:mhanberg/advent-of-code-elixir-starter.git advent-of-code
-$ cd advent-of-code
-
-# Reinitialize your git repo
-$ rm -rf .git && rm -rf .github
-$ git init
+$ opam switch create . --deps-only --y
 ```
-### Get started coding with zero configuration
 
-#### Using Visual Studio Code
+### Install developer tool dependencies
 
-1. [Install Docker Desktop](https://www.docker.com/products/docker-desktop)
-1. Open project directory in VS Code
-1. Press F1, and select `Remote-Containers: Reopen in Container...`
-1. Wait a few minutes as it pulls image down and builds Dev Conatiner Docker image (this should only need to happen once unless you modify the Dockerfile)
-    1. You can see progress of the build by clicking `Starting Dev Container (show log): Building image` that appears in bottom right corner
-    1. During the build process it will also automatically run `mix deps.get`
-1. Once complete VS Code will connect your running Dev Container and will feel like your doing local development
-1. If you would like to use a specific version of Elixir change the `VARIANT` version in `.devcontainer/devcontainer.json`
-1. If you would like more information about VS Code Dev Containers check out the [dev container documentation](https://code.visualstudio.com/docs/remote/create-dev-container/?WT.mc_id=AZ-MVP-5003399)
+```bash
+$ opam install ocaml-lsp-server ocamlformat utop
+```
 
-#### Compatible with Github Codespaces
-1. If you dont have Github Codespaces beta access, sign up for the beta https://github.com/features/codespaces/signup
-1. On GitHub, navigate to the main page of the repository.
-1. Under the repository name, use the  Code drop-down menu, and select Open with Codespaces.
-1. If you already have a codespace for the branch, click  New codespace.
+### Validate you can build with dune
+
+```bash
+$ dune build
+```
+
+> [!WARNING]
+> If any of these steps fail or cause an error please open an issue
+
+## Configure authentication
+
+This projects needs a session token from `adventofcode.com` in order to download
+your puzzle inputs and submit your answers.
+
+Start by logging in to `adventofcode.com`, then browsing to one of the puzzle
+dashboards (e.g. https://adventofcode.com/2024).
+
+Open your developer tools and reload the page. This should issue a GET request,
+e.g. `GET https://adventofcode.com/2024`. Look for the `Cookie: ` request
+header, which should contain a value that looks like (where `x` is a hex value):
+
+```
+session=5xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5
+```
+
+This value is your session token. You'll need to store it as an environment
+variable called `AUTH_TOKEN`. One convenient way of doing this is to use a tool
+like [direnv](https://direnv.net/), e.g.:
+
+`.envrc`:
+
+```shell
+export AUTH_TOKEN="5xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5"
+```
+
+> [!TIP]
+> If you don't want to configure authentication, you will manually need to create your input directories and files.
+> This can be done by creating the following directory structure from the project root:
+>
+> ```shell
+> $ mkdir inputs/{year}/{day}.txt
+> ```
+>
+> where Day 01 of 2024 would look like:
+>
+> ```shell
+> $ mkdir inputs/2024/01.txt
+> ```
+
+## Working on problems
+
+Each problem needs to conform to the `Problem.T`, which provides basic
+information about which year/day the problem is for, and functions to call which
+compute the puzzle output from puzzle input.
+
+### Adding problem files
+
+It will automatically register `.ml` or `.re` files in `lib/problems` which start
+with `problem` -- e.g. `lib/problems/problem_2024_01.ml` or `lib/problems/problem_2024_01.re`.
+Once you've added a file of this form, you can run it from the CLI.
+
+For example, if we'd like to start working on day 1 of year 2024, it
+will automatically we can add this file:
+
+#### OCaml
+
+`lib/problems/problem_2024_01.ml`;
+
+```ocaml
+let year = 2024
+let day = 1
+
+module Part_1 = struct
+  let run (input : string) : (string, string) result = Ok input
+end
+
+module Part_2 = struct
+  let run (input : string) : (string, string) result = Ok input
+end
+```
+
+#### ReasonML
+
+`lib/problems/problem_2024_01.re`;
+
+```reason
+let year = 2024;
+let day = 1;
+
+module Part_1 = {
+  let run = (input: string): result(string, string) => Ok(input);
+};
+
+module Part_2 = {
+  let run = (input: string): result(string, string) => Ok(input);
+};
+```
+
+> [!TIP]
+> It's also helpful to add a `.mli` or `.rei` file, which gives the compiler more
+> information about which parts of your code are unused and can therefore be
+> cleaned up:
+
+### OCaml
+
+`lib/problems/problem_2024_01.mli`:
+
+```ocaml
+include Problem.T
+```
+
+### ReasonML
+
+`lib/problems/problem_2024_01.rei`:
+
+```reason
+include Problem.T;
+```
+
+### Running problems
+
+Once you've added your problem, you can test your solution by running it with `dune` (optionally providing
+the `--watch` flag will re-run your problem when you change your code). This will output your answer to the terminal:
+
+```shell
+$ dune exec --watch bin/main.exe -- \
+  --year=2024 \
+  --day=1 \
+  --part=1
+
+  # output
+  your_answer
+```
+
+### Submitting answers
+
+Once you're convinced that your problem produces the correct output, you can
+either copy and paste your solution into the answer form on `adventofcode.com`,
+or you can also submit your answer using the CLI via the `--submit` flag.
+
+> [!WARNING]
+> You'll want to disable the `--watch` flag if you have it enabled -- otherwise
+> you'll end up making a lot of requests to `adventofcode.com`...
+
+```shell
+dune exec bin/main.exe -- \
+  --year=2024 \
+  --day=1 \
+  --part=1 \
+  --submit
+```
