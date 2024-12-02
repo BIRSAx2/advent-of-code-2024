@@ -27,3 +27,6 @@ advent_of_code_2018-*.tar
 
 # Ignore IntelliJ IDEA files
 .idea/
+
+# Ignore LSP files
+.elixir-tools
