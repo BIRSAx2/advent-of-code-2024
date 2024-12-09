@@ -14,7 +14,7 @@ defmodule AdventOfCode.Day06 do
 
   def part2(input) do
     positions_map = parse(input)
-    {guard_pos, direction, visited} = simulate(positions_map)
+    {guard_pos, _direction, visited} = simulate(positions_map)
 
     visited_positions = MapSet.to_list(visited)
 
@@ -90,7 +90,7 @@ defmodule AdventOfCode.Day06 do
     end)
   end
 
-  defp causes_loop?(positions_map, obstruction_pos, guard_start) do
+  defp causes_loop?(positions_map, obstruction_pos, _guard_start) do
     orig = Map.get(positions_map, obstruction_pos, :open)
     if orig == :open do
       new_map = Map.put(positions_map, obstruction_pos, :wall)
